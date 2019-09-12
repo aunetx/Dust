@@ -54,7 +54,6 @@ fn handle_method_get(request: Request) -> Result<(), ErrorType> {
         "server",
         match match_path(request.url()) {
             Some(u) => u,
-            // ! Implement 404 DOES NOT EXISTS in error data management
             None => return Ok(()),
         },
         "index.html",
