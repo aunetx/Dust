@@ -3,7 +3,7 @@ use simple_logger;
 use std::fs;
 use std::sync::Arc;
 use threadpool::ThreadPool;
-use tiny_http::{Header, Method, Request, Response, Server};
+use tiny_http::*;
 
 const MAX_THREADS: usize = 4;
 const SERVER_ADDR: &str = "127.0.0.1:3000";
@@ -45,20 +45,21 @@ fn handle_request(request: Request) -> Result<(), ErrorType> {
             info!("GET request from {}", request.remote_addr());
             handle_method_get(request)
         }
+        Method::Put => {
+            info!("PUT request from {}", request.remote_addr());
+            handle_method_put(request)
+        }
         uk_method => Err(ErrorType::UnknownMethod(uk_method.clone())),
     }
 }
 
+// * Basic page and assets loading
 fn handle_method_get(request: Request) -> Result<(), ErrorType> {
-    let url = [
-        "server",
-        match match_path(request.url()) {
-            Some(u) => u,
-            None => return Ok(()),
-        },
-        "index.html",
-    ]
-    .join("/");
+    let (path, code) = match match_path(request.url()) {
+        Some(r) => r,
+        None => return Ok(()),
+    };
+    let url = ["server", path].join("/");
 
     trace!(target: "disks", "Serving page {}", &url);
     let html_content = match fs::read_to_string(&url) {
@@ -68,8 +69,26 @@ fn handle_method_get(request: Request) -> Result<(), ErrorType> {
 
     // * Create response
     let content_type_header = Header::from_bytes(&b"Content-Type"[..], &b"text/html"[..]).unwrap();
-    let mut response = Response::from_string(html_content);
-    response.add_header(content_type_header);
+    let response = Response::from_string(html_content)
+        .with_header(content_type_header)
+        .with_status_code(code);
+    match request.respond(response) {
+        Ok(()) => Ok(()),
+        Err(_) => Err(ErrorType::CantRespond),
+    }
+}
+
+// * Socket method : respond accordingly to that
+fn handle_method_put(request: Request) -> Result<(), ErrorType> {
+    if request.url() != "/socket/message" {
+        return Err(ErrorType::BadPutRequest(request.url().to_string()));
+    }
+
+    // * Create response
+    let content_type_header =
+        Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap();
+    let response =
+        Response::from_string("{\"res\": \"THIS IS A MESSAGE\"}").with_header(content_type_header);
     match request.respond(response) {
         Ok(()) => Ok(()),
         Err(_) => Err(ErrorType::CantRespond),
@@ -77,16 +96,18 @@ fn handle_method_get(request: Request) -> Result<(), ErrorType> {
 }
 
 // * Path white_/black_listing
-fn match_path(url: &str) -> Option<&str> {
+fn match_path(url: &str) -> Option<(&str, i32)> {
     match url {
         //? Authorized paths
-        "/" => Some("/"),
+        "/" => Some(("/index.html", 200)),
+        //? Javascript paths
+        "/js/socket.js" => Some(("js/socket.js", 200)),
         //? Blacklisted paths
         "/favicon.ico" => None,
         //? Other paths: 404 error
         bad_path => {
             warn!("404 : {:?} does not exists", bad_path);
-            Some("/errors/404")
+            Some(("/errors/404/index.html", 404))
         }
     }
 }
@@ -95,6 +116,7 @@ fn match_path(url: &str) -> Option<&str> {
 enum ErrorType {
     UnknownMethod(Method),
     FileNotFound(String),
+    BadPutRequest(String),
     CantRespond,
 }
 
@@ -105,6 +127,9 @@ fn handle_error(e: ErrorType) {
         }
         ErrorType::FileNotFound(file) => {
             error!("file not found {}", file);
+        }
+        ErrorType::BadPutRequest(request) => {
+            error!("PUT request does not cover message {}", request);
         }
         ErrorType::CantRespond => {
             error!("can't respond, unknown error");
