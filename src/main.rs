@@ -127,25 +127,6 @@ fn match_path(url: &str) -> (&str, i32, &str) {
     } else {
         (url, 200, mime_type)
     }
-
-    /*match url {
-        //? Authorized paths
-        "/" => ("/index.html", 200, mime_type),
-        //? Javascript paths
-        "/js/socket.js" => ("js/socket.js", 200, mime_type),
-        //? Images paths
-        "/res/logo.svg" => ("/res/logo.svg", 200, mime_type),
-        //? Blacklisted paths : DO NOT USE unless you are a lazy man (like for favicon.ico)
-        "/favicon.ico" => {
-            warn!(target: "client", "403: {:?} forbidden or blacklisted", url);
-            ("/errors/403.html", 403, mime_type)
-        }
-        //? Othbad_pather paths: 404 error
-        bad_path => {
-            warn!(target: "client", "404 : {:?} does not exists", bad_path);
-            ("/errors/404.html", 404, mime_type)
-        }
-    }*/
 }
 
 // * Match mime type
