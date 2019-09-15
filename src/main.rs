@@ -1,5 +1,5 @@
 use log::*;
-use simple_logger;
+use simplelog::*;
 use std::fs;
 use std::sync::Arc;
 use threadpool::ThreadPool;
@@ -11,7 +11,16 @@ const SERVER_ADDR: &str = "127.0.0.1:3000";
 fn main() -> Result<(), i32> {
     // * Inits
     //logger
-    simple_logger::init_with_level(Level::Info).unwrap();
+    CombinedLogger::init(vec![
+        TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed).unwrap(),
+        WriteLogger::new(
+            LevelFilter::Debug,
+            Config::default(),
+            std::fs::File::create("server_run.log").unwrap(),
+        ),
+    ])
+    .unwrap();
+
     //server
     let main_serv = Server::http(SERVER_ADDR).unwrap();
     //shared thread server
