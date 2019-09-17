@@ -8,6 +8,8 @@ use tiny_http::*;
 const MAX_THREADS: usize = 4;
 const SERVER_ADDR: &str = "127.0.0.1:3000";
 
+// ! MAIN
+
 fn main() -> Result<(), i32> {
     // * Inits
     //logger
@@ -38,6 +40,8 @@ fn main() -> Result<(), i32> {
     Ok(())
 }
 
+// ! SERVER
+
 // * Handling the server: accept requests, handle them and wether respond or handle the error
 fn handle_server(thread_server: Arc<Server>, _worker_id: usize) {
     for request in thread_server.incoming_requests() {
@@ -51,6 +55,7 @@ fn handle_server(thread_server: Arc<Server>, _worker_id: usize) {
 
 fn handle_request(request: Request) -> Result<(), ErrorType> {
     match request.method() {
+        // TODO reject truly other requests (now: 500 server error)
         Method::Get => {
             info!(
                 "GET request from {} : {:?}",
@@ -72,7 +77,9 @@ fn handle_request(request: Request) -> Result<(), ErrorType> {
     }
 }
 
-// * Basic page and assets loading
+// ! HTTP GET
+
+// * Page and assets loading : GET method
 fn handle_method_get(request: Request) -> Result<(), ErrorType> {
     let (path, code, mime_type) = match_path(request.url());
     let url = if mime_type == "text/html" {
@@ -164,7 +171,7 @@ fn match_mime_type(url: &str) -> Result<&str, ErrorType> {
     }
 }
 
-// ! SOCKET
+// ! HTTP PUT
 
 // * Socket method : respond accordingly to that
 fn handle_method_put(request: Request) -> Result<(), ErrorType> {
@@ -183,7 +190,7 @@ fn handle_method_put(request: Request) -> Result<(), ErrorType> {
     }
 }
 
-// ! NOT SOCKET ANYMORE
+// ! ERRORS
 
 // * Error handling
 enum ErrorType {
