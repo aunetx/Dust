@@ -2,7 +2,8 @@
     "compilerOptions": {
         "module": "commonjs",
         "target": "es2016",
-        "jsx": "preserve"
+        "jsx": "preserve",
+        "sourceMap": true
     },
     "include": [
         "server/js"

@@ -1,27 +1,42 @@
-function change(message) {
-    let socket = new Socket();
-    socket.send(message, function (text) {
-        document.getElementById("demo").innerHTML = text;
+function change() {
+    let message = "Hello world!";
+    let socket = new SocketNoRt();
+    socket.onResponse(function (text) {
+        console.log(text);
     });
+    socket.send(message);
 }
-class Socket {
+class SocketNoRt {
     constructor() {
         this.ip = "http://" + location.host + "/socket/message";
+        // Request init
+        this.request = new XMLHttpRequest();
+        this.request.responseType = "json";
+        this.request.open('PUT', this.ip, true);
+        this.request.onreadystatechange = this.stateChanged;
     }
-    send(message, callback) {
-        var request = new XMLHttpRequest();
-        request.responseType = "json";
-        request.open('PUT', this.ip, true);
-        request.onreadystatechange = function () {
-            if (request.readyState == 4) {
-                if (request.status == 200) {
-                    callback(request.response.res);
-                }
-                else {
-                    console.log("Cannot retrieve socket answer : HTTP status code is " + request.status);
-                }
+    send(message) {
+        this.request.send();
+    }
+    stateChanged(event) {
+        let req = event.target;
+        console.log(this);
+        if (req.readyState == 4) {
+            if (req.status == 200) {
+                console.log("Well done");
+                //soThis.on_response(req.response.res);
             }
-        };
-        request.send();
+            else {
+                console.log("Cannot retrieve socket answer : HTTP status code is " + req.status);
+            }
+        }
+    }
+    onResponse(callback) {
+        this.on_response = callback;
     }
 }
+class SocketRt {
+    constructor() {
+    }
+}
+//# sourceMappingURL=socket.js.map

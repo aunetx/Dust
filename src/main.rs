@@ -138,6 +138,10 @@ fn match_path(url: &str) -> (&str, i32, &str) {
 
 // * Match mime type
 fn match_mime_type(url: &str) -> Result<&str, ErrorType> {
+    // Permits debugging in browser
+    if url.ends_with(".map") {
+        return Ok("application/octet-stream");
+    };
     let splitted_url: Vec<&str> = url.split('.').collect();
     match splitted_url.len() {
         1 => Ok("text/html"),
