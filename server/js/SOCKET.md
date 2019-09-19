@@ -8,4 +8,24 @@ This creates a new `Socket` object :
 socket = new Socket()
 ```
 
-You can also create that object with custom server 
+You can also create that object with custom server ip and port.
+Note that the port is a `string` and not a `number` :
+
+```javascript
+socket = new Socket("https://custom.ip", "8080")
+```
+
+## Sending a message to server
+
+A message is composed by a `name` and an optional `content`, that is a JSON object.
+To send a message, nothing simpler :
+
+```javascript
+socket = new Socket()
+
+socket.send("get_hour");
+socket.send("direct_message", {
+    target: "user1",
+    message: "Hello world!"
+})
+```
