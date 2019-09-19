@@ -1,15 +1,42 @@
 function change() {
-    let message = "Hello world!";
-    let socket = new SocketNoRt();
-
-    socket.onResponse(function (text) {
-        console.log(text);
-    });
-
-    socket.send(message);
+    socket.send("Hello")
 }
 
-class SocketNoRt {
+class Socket {
+    server: {
+        ip?: string
+    }
+    request: XMLHttpRequest;
+
+    send(message_name: string, content?: {}) {
+        // open request and set Header 'Message-Name'
+        this.request.open('PUT', this.server.ip, true)
+        this.request.setRequestHeader('Message-Name', message_name)
+        // send request
+        if (content) {
+            this.request.send(JSON.stringify(content))
+        } else {
+            this.request.send()
+        }
+
+        this.request.onload = function () {
+            console.log(this.status)
+            console.log(this.response)
+        }
+    }
+
+    constructor(domain?: string, port?: string) {
+        this.server = {}
+        this.server.ip = "http://" + (domain ? domain : location.hostname) + ':' + (port ? port : location.port) + "/socket/message"
+
+        this.request = new XMLHttpRequest()
+        this.request.responseType = "json"
+    }
+}
+
+let socket = new Socket();
+
+/*class SocketNoRt {
     ip: string;
     request: XMLHttpRequest;
 
@@ -44,18 +71,4 @@ class SocketNoRt {
         this.request.open('PUT', this.ip, true);
         this.request.onreadystatechange = this.stateChanged;
     }
-}
-
-class SocketRt {
-    server: {
-        ip: string;
-    }
-    client: {
-        id: number;
-    }
-    request: XMLHttpRequest;
-
-    constructor() {
-        
-    }
-}
+}*/

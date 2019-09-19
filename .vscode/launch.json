@@ -4,7 +4,7 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch Chrome against localhost",
+            "name": "Chromium debug",
             "runtimeExecutable": "/usr/bin/chromium-browser",
             "url": "http://127.0.0.1:3000/",
             "webRoot": "${workspaceFolder}",
