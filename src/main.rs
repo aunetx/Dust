@@ -75,6 +75,8 @@ fn handle_request(request: Request) -> Result<(), ErrorType> {
         }
         uk_method => Err(ErrorType::UnknownMethod(uk_method.clone())),
     }
+    // TODO catch errors and send back an adapted response ?
+    // (althought 500-server-side error is great too)
 }
 
 // ! HTTP GET
