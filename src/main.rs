@@ -138,7 +138,7 @@ fn match_path(url: &str) -> (&str, i32, &str) {
 
 // * Match mime type
 fn match_mime_type(url: &str) -> Result<&str, ErrorType> {
-    // Permits debugging in browser
+    // ! Permits debugging in browser
     if url.ends_with(".map") {
         return Ok("application/octet-stream");
     };
@@ -178,10 +178,46 @@ fn match_mime_type(url: &str) -> Result<&str, ErrorType> {
 // ! HTTP PUT
 
 // * Socket method : respond accordingly to that
-fn handle_method_put(request: Request) -> Result<(), ErrorType> {
+fn handle_method_put(mut request: Request) -> Result<(), ErrorType> {
+    // * Verify that message is effectively our
     if request.url() != "/socket/message" {
         return Err(ErrorType::BadPutRequest(request.url().to_string()));
     }
+
+    // * Get message name
+    let mut message_name = String::new();
+    // permits dropping temp values
+    {
+        let message_headers = request.headers().to_vec();
+        // TODO implement another way to get name of message (too much cpu time)
+        for header in message_headers {
+            let header = format!("{}", header);
+            let header: Vec<&str> = header.split(':').collect();
+            let mut header = header.iter();
+            let first_header = *header.next().unwrap();
+
+            if "Message-Name" == first_header {
+                message_name = header.next().unwrap().to_string();
+            }
+        }
+    }
+    if message_name.is_empty() {
+        return Err(ErrorType::EmptyNameSocketMsg);
+    }
+
+    // * Get message content
+    let mut content = String::new();
+    match request.as_reader().read_to_string(&mut content) {
+        Ok(_) => (),
+        Err(_) => return Err(ErrorType::CannotReadSocketContent(message_name)),
+    };
+    let contains_content = !content.is_empty();
+
+    // ! DEBUG print message name and content
+    debug!(
+        "Name of Socket request :\n{:?}\nContent :\n{}",
+        message_name, content
+    );
 
     // * Create response
     let content_type_header =
@@ -198,31 +234,28 @@ fn handle_method_put(request: Request) -> Result<(), ErrorType> {
 
 // * Error handling
 enum ErrorType {
+    // Get
     UnknownMethod(Method),
     FileNotFound(String),
-    BadPutRequest(String),
     CantDecideMime(String),
     InvalidUrlSeparator,
     CantRespond,
+    // Socket
+    BadPutRequest(String),
+    CannotReadSocketContent(String),
+    EmptyNameSocketMsg,
 }
 
+#[rustfmt::skip]
 fn handle_error(e: ErrorType) {
     match e {
-        ErrorType::UnknownMethod(method) => {
-            warn!("unknown method {:?}, do nothing", method);
-        }
-        ErrorType::FileNotFound(file) => {
-            error!("file not found {:?}", file);
-        }
-        ErrorType::BadPutRequest(request) => {
-            error!("PUT request does not cover message {:?}", request);
-        }
-        ErrorType::CantDecideMime(mime) => error!("Can't infer type for {:?}", mime),
-        ErrorType::InvalidUrlSeparator => {
-            error!("invalid url request number of separators, 404 error")
-        }
-        ErrorType::CantRespond => {
-            error!("can't respond, unknown error");
-        }
+        ErrorType::UnknownMethod(method) =>         warn!("unknown method {:?}, do nothing", method),
+        ErrorType::FileNotFound(file) =>            error!("file not found {:?}", file),
+        ErrorType::CantDecideMime(mime) =>          warn!("Can't infer type for {:?}", mime),
+        ErrorType::InvalidUrlSeparator =>           error!("invalid url request number of separators, 404 error"),
+        ErrorType::CantRespond =>                   error!("can't respond, unknown error"),
+        ErrorType::BadPutRequest(request) =>        error!("PUT request does not cover message {:?}", request),
+        ErrorType::CannotReadSocketContent(name) => error!("Cannot read content of message {:?}", name),
+        ErrorType::EmptyNameSocketMsg =>            warn!("Empty name for socket message"),
     }
 }
