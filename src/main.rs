@@ -222,10 +222,16 @@ fn handle_method_put(mut request: Request) -> Result<(), ErrorType> {
     );
 
     // * Create response
+    // response name
+    let response_name_header = Header::from_bytes(&b"Response-Name"[..], &b"hello"[..]).unwrap();
+    // content-type: json
     let content_type_header =
         Header::from_bytes(&b"Content-Type"[..], &b"application/json"[..]).unwrap();
-    let response =
-        Response::from_string("{\"res\": \"THIS IS A MESSAGE\"}").with_header(content_type_header);
+    // joining headers
+    let response = Response::from_string("{\"res\": \"THIS IS A MESSAGE\"}")
+        .with_header(content_type_header)
+        .with_header(response_name_header);
+    // sending response
     match request.respond(response) {
         Ok(()) => Ok(()),
         Err(_) => Err(ErrorType::CantRespond),
