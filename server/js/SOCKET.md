@@ -23,9 +23,33 @@ To send a message, nothing simpler :
 ```javascript
 socket = new Socket()
 
+// without content
 socket.send("get_hour");
+
+// with JSON content
 socket.send("direct_message", {
     target: "user1",
     message: "Hello world!"
 })
+```
+
+## Intercepting incoming message
+
+An incoming message from the server can be retrieved with `socket.on()`
+
+```javascript
+// unamed function
+socket.on("user_data", function(data) {
+    console.log(data);
+})
+// OR : more modern
+socket.on("user_data", (data) => {
+    console.log(data)
+});
+
+// named function
+function showData(data) {
+    console.log(data);
+}
+socket.on("user_data", (data) => showData(data));
 ```

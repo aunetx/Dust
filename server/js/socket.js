@@ -1,13 +1,18 @@
 function change() {
+    socket.on("Hello", (data) => {
+        console.log("Hello", data);
+    });
     socket.send("Hello");
 }
 class Socket {
     constructor(domain, port) {
+        this.callback_list = {};
         this.server = {};
         this.server.ip = "http://" + (domain ? domain : location.hostname) + ':' + (port ? port : location.port) + "/socket/message";
         this.request = new XMLHttpRequest();
         this.request.responseType = "json";
     }
+    // * Send message
     send(message_name, content) {
         // open request and set Header 'Message-Name'
         this.request.open('PUT', this.server.ip, true);
@@ -19,10 +24,17 @@ class Socket {
         else {
             this.request.send();
         }
-        this.request.onload = function () {
-            console.log(this.status);
-            console.log(this.response);
+        // get response and launch user-defined function
+        var socketClass = this;
+        this.request.onload = function (d) {
+            if (this.status == 200) {
+                socketClass.callback_list[message_name](this.response);
+            }
         };
+    }
+    // * Set response for message
+    on(name, callback) {
+        this.callback_list[name] = callback;
     }
 }
 let socket = new Socket();
