@@ -153,6 +153,7 @@ fn match_mime_type(url: &str) -> Result<&str, ErrorType> {
                 "html" => Ok("text/html"),
                 "js" => Ok("text/javascript"),
                 "css" => Ok("text/css"),
+                "ts" => Ok("text/typescript"),
                 // Images
                 "apng" => Ok("image/apng"),
                 "bmp" => Ok("image/bmp"),
