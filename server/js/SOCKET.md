@@ -20,6 +20,8 @@ socket = new Socket("https://custom.ip", "8080")
 A message is composed by a `name` and an optional `content`, that is a JSON object.
 To send a message, nothing simpler :
 
+- ### `socket.send()`
+
 ```javascript
 socket = new Socket()
 
@@ -35,7 +37,23 @@ socket.send("direct_message", {
 
 ## Intercepting incoming message
 
-An incoming message from the server can be retrieved with `socket.on()`
+An incoming message from the server can be retrieved with differents ways :
+
+- ### `socket.send().callback()`
+
+Simplest and quickest way to write client/server one-way communication (intercept only the response of that actual message, not every message named the same) :
+
+```javascript
+socket.send("get_hour").callback((response) => {
+    console.log("Hour is : ", response)
+})
+```
+
+*Note : prevents `socket.on()`'s defined callback to be fired !*
+
+- ### `socket.on()`
+
+Intercepts any message that is not intercepted by `send().callback()`. Can also fire on server message (that are not a response to a client request) :
 
 ```javascript
 // unamed function
