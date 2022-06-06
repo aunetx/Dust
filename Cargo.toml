@@ -9,5 +9,5 @@ edition = "2018"
 [dependencies]
 log= "0.4.8"
 simplelog = "0.7.2"
-tiny_http = "0.6.2"
+tiny_http = "0.8.0"
 threadpool = "1.7.1"
